@@ -99,4 +99,46 @@ if 'seo_data' in st.session_state:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.subheader("🏅 10 TIÊU ĐỀ YOUTUBE HẤP DẪN")
     for i, t in enumerate(data['titles'], 1):
-        st.write(f"**{i
+        st.write(f"**{i}.** {t}")
+    
+    st.divider()
+    # Chức năng chọn tiêu đề để viết mô tả (Mở rộng)
+    selected_title = st.selectbox("Chọn 1 tiêu đề để AI viết mô tả chi tiết:", data['titles'])
+    if st.button("📝 VIẾT MÔ TẢ CHO TIÊU ĐỀ NÀY"):
+        with st.spinner("AI đang soạn thảo mô tả chuẩn SEO..."):
+            desc_prompt = f"Viết mô tả Youtube chuẩn SEO cho tiêu đề: '{selected_title}'. Bao gồm: Giới thiệu, Nội dung chính, Hashtags và Kêu gọi hành động."
+            st.session_state.generated_desc = get_ai_response(api_key, desc_prompt)
+    
+    if 'generated_desc' in st.session_state:
+        st.markdown('<div class="desc-output">', unsafe_allow_html=True)
+        st.write(st.session_state.generated_desc)
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2.2 Tags & Hashtags & Bình luận (Ảnh 846)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    c_a, c_b = st.columns([2, 1])
+    with c_a:
+        st.subheader("📊 25 TỪ KHÓA TỈ LỆ TÌM KIẾM CAO")
+        tags_html = "".join([f'<span class="tag-chip">{tag}</span>' for tag in data['tags']])
+        st.markdown(tags_html, unsafe_allow_html=True)
+        st.text_area("Copy bộ Tag:", ", ".join(data['tags']), height=100)
+    with c_b:
+        st.subheader("#️⃣ HASHTAGS")
+        st.code(" ".join(data['hashtags']))
+        st.subheader("💬 BÌNH LUẬN MẪU")
+        st.info(data['pinned'])
+        st.subheader("📌 BÌNH LUẬN ĐỐI THỦ")
+        st.caption(data.get('comment_rival', 'Đang cập nhật...'))
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2.3 Công cụ tạo Prompt ảnh (Ảnh 847)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.subheader("🎨 CÔNG CỤ TẠO PROMPT ẢNH THUMBNAIL")
+    t_text = st.text_input("Văn bản muốn hiện trên ảnh", placeholder="Ví dụ: KIẾM 1000$ MỖI THÁNG")
+    style = st.selectbox("Phong cách ảnh", ["Realistic Photorealistic", "3D Disney Style", "Cyberpunk", "Minimalist"])
+    
+    if st.button("🖼️ TẠO MÃ PROMPT"):
+        img_prompt = f"Youtube Thumbnail for '{selected_title}', style: {style}, focal text: '{t_text}', high contrast, 8k resolution, cinematic lighting."
+        st.code(img_prompt, language="markdown")
+    st.markdown('</div>', unsafe_allow_html=True)

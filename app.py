@@ -7,7 +7,7 @@ import time
 # CONFIG UI
 # ==============================
 
-st.set_page_config(page_title="SEO Youtube AI", layout="wide")
+st.set_page_config(page_title="AI SEO Youtube", layout="wide")
 
 st.markdown("""
 <style>
@@ -15,22 +15,25 @@ st.markdown("""
 background-color:#1e212b;
 color:white;
 }
-.glass{
+
+.card{
 background:rgba(30,41,59,0.7);
 padding:25px;
 border-radius:15px;
 border:1px solid #475569;
 margin-bottom:20px;
 }
+
 .title{
 text-align:center;
 font-size:34px;
 font-weight:800;
 color:#f1c40f;
 }
+
 .tag{
 background:#334155;
-padding:5px 10px;
+padding:6px 12px;
 border-radius:12px;
 margin:4px;
 display:inline-block;
@@ -45,32 +48,36 @@ st.markdown('<p class="title">🚀 AI SEO YOUTUBE TOOL</p>', unsafe_allow_html=T
 # ==============================
 
 with st.sidebar:
-    st.header("🔑 API")
+    st.header("🔑 API KEY")
     api_key = st.text_input("Gemini API Key", type="password")
 
 # ==============================
-# LOAD MODEL (CACHE)
+# LOAD MODEL
 # ==============================
 
 @st.cache_resource
 def load_model(key):
+
     genai.configure(api_key=key)
-    return genai.GenerativeModel("gemini-1.5-flash")
+
+    return genai.GenerativeModel("gemini-2.0-flash")
 
 # ==============================
-# SAFE JSON PARSER
+# JSON PARSER
 # ==============================
 
 def extract_json(text):
+
     try:
         start = text.index("{")
         end = text.rindex("}") + 1
         return json.loads(text[start:end])
+
     except:
         return None
 
 # ==============================
-# AI CALL
+# AI GENERATE
 # ==============================
 
 def ai_generate(prompt):
@@ -80,35 +87,40 @@ def ai_generate(prompt):
     for i in range(3):
 
         try:
+
             response = model.generate_content(prompt)
+
             return response.text
 
         except Exception as e:
 
             if "429" in str(e):
+
                 time.sleep(5)
+
             else:
+
                 return f"LỖI: {e}"
 
     return "ERROR_429"
 
 # ==============================
-# INPUT
+# INPUT FORM
 # ==============================
 
-st.markdown('<div class="glass">', unsafe_allow_html=True)
+st.markdown('<div class="card">', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
+col1,col2 = st.columns(2)
 
 with col1:
 
-    lang = st.selectbox(
+    language = st.selectbox(
         "Ngôn ngữ",
-        ["Vietnamese", "English"]
+        ["Vietnamese","English"]
     )
 
     competitor = st.text_input(
-        "Link video đối thủ (tùy chọn)"
+        "Link video đối thủ (optional)"
     )
 
 with col2:
@@ -118,10 +130,10 @@ with col2:
     )
 
     channel = st.text_input(
-        "Link kênh của bạn (tùy chọn)"
+        "Link kênh của bạn (optional)"
     )
 
-generate = st.button("🚀 TẠO SEO")
+generate = st.button("🚀 TẠO SEO VIDEO")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -132,6 +144,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 if generate:
 
     if keyword == "" or api_key == "":
+
         st.warning("Vui lòng nhập keyword và API key")
 
     else:
@@ -143,45 +156,48 @@ if generate:
 You are a professional YouTube SEO expert.
 
 Keyword: {keyword}
-Language: {lang}
+Language: {language}
 
 Return ONLY JSON:
 
 {{
-"titles":["10 viral YouTube titles optimized for CTR"],
-"tags":["25 high search volume tags"],
+"titles":["10 viral youtube titles"],
+"tags":["25 high search volume youtube tags"],
 "hashtags":["10 trending hashtags"],
 "pinned":"Pinned comment to increase engagement",
 "comment_rival":"Example smart comment to leave on competitor video"
 }}
 
 Rules:
-- Titles under 70 characters
-- Tags optimized for YouTube search
-
+Titles under 70 characters
+Tags optimized for YouTube search
 """
 
             if competitor:
+
                 prompt += f"\nAnalyze competitor video: {competitor}"
 
-            res = ai_generate(prompt)
+            result = ai_generate(prompt)
 
-            if res == "ERROR_429":
+            if result == "ERROR_429":
 
-                st.error("API quá tải. Hãy đợi vài giây.")
+                st.error("API quá tải. Hãy thử lại sau.")
 
-            elif res.startswith("LỖI"):
+            elif result.startswith("LỖI"):
 
-                st.error(res)
+                st.error(result)
 
             else:
 
-                data = extract_json(res)
+                data = extract_json(result)
 
                 if data:
+
                     st.session_state.seo = data
+
                 else:
-                    st.error("AI trả dữ liệu sai định dạng")
+
+                    st.error("AI trả sai định dạng JSON")
 
 # ==============================
 # OUTPUT
@@ -193,13 +209,14 @@ if "seo" in st.session_state:
 
     # TITLES
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.subheader("🏆 Tiêu đề gợi ý")
+    st.subheader("🏆 10 Tiêu đề gợi ý")
 
-    titles = data.get("titles", [])
+    titles = data.get("titles",[])
 
-    for i, t in enumerate(titles, 1):
+    for i,t in enumerate(titles,1):
+
         st.write(f"{i}. {t}")
 
     selected_title = st.selectbox(
@@ -207,23 +224,24 @@ if "seo" in st.session_state:
         titles
     )
 
-    if st.button("📝 Viết mô tả"):
+    if st.button("📝 Viết mô tả SEO"):
 
-        prompt = f"""
-Write a YouTube SEO description for title:
+        desc_prompt = f"""
+Write SEO YouTube description for:
 
 {selected_title}
 
 Include:
-- intro
-- main content
-- call to action
-- hashtags
+Intro
+Main content
+Call to action
+Hashtags
 """
 
-        desc = ai_generate(prompt)
+        desc = ai_generate(desc_prompt)
 
         if desc:
+
             st.session_state.desc = desc
 
     if "desc" in st.session_state:
@@ -238,17 +256,21 @@ Include:
 
     # TAGS
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    st.subheader("🏷 Tags")
+    st.subheader("🏷️ Tags SEO")
 
-    tags = data.get("tags", [])
+    tags = data.get("tags",[])
 
     for tag in tags:
-        st.markdown(f'<span class="tag">{tag}</span>', unsafe_allow_html=True)
+
+        st.markdown(
+            f'<span class="tag">{tag}</span>',
+            unsafe_allow_html=True
+        )
 
     st.text_area(
-        "Copy Tags",
+        "Copy tags",
         ", ".join(tags),
         height=100
     )
@@ -257,19 +279,19 @@ Include:
 
     # HASHTAGS
 
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
     st.subheader("#️⃣ Hashtags")
 
-    st.code(" ".join(data.get("hashtags", [])))
+    st.code(" ".join(data.get("hashtags",[])))
 
-    st.subheader("💬 Pinned Comment")
+    st.subheader("💬 Pinned comment")
 
-    st.info(data.get("pinned", ""))
+    st.info(data.get("pinned",""))
 
     st.subheader("📌 Comment đối thủ")
 
-    st.write(data.get("comment_rival", ""))
+    st.write(data.get("comment_rival",""))
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -277,14 +299,16 @@ Include:
 # THUMBNAIL PROMPT
 # ==============================
 
-st.markdown('<div class="glass">', unsafe_allow_html=True)
+st.markdown('<div class="card">', unsafe_allow_html=True)
 
-st.subheader("🎨 Thumbnail Prompt")
+st.subheader("🎨 Thumbnail Prompt Generator")
 
-text_thumb = st.text_input("Text trên thumbnail")
+thumb_text = st.text_input(
+    "Text trên thumbnail"
+)
 
 style = st.selectbox(
-"Phong cách",
+"Phong cách ảnh",
 [
 "Photorealistic",
 "3D Disney",
@@ -293,19 +317,19 @@ style = st.selectbox(
 ]
 )
 
-if st.button("🖼 Tạo Prompt"):
+if st.button("🖼️ Tạo Prompt Thumbnail"):
 
     prompt = f"""
 YouTube thumbnail for video about {keyword}
 
 Style: {style}
 
-Big bold text: {text_thumb}
+Big bold text: {thumb_text}
 
 High contrast
-Cinematic lighting
 8k resolution
-Viral youtube thumbnail
+Cinematic lighting
+Eye catching
 """
 
     st.code(prompt)

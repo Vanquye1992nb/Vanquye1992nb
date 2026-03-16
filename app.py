@@ -4,7 +4,7 @@ import json
 import re
 import time
 
-# --- 1. CẤU HÌNH GIAO DIỆN CHUẨN MẪU ---
+# --- 1. CẤU HÌNH GIAO DIỆN CHUẨN (Theo ảnh 843, 844) ---
 st.set_page_config(page_title="Trợ Lý SEO Youtube Văn Thế", layout="wide")
 
 st.markdown("""
@@ -15,9 +15,9 @@ st.markdown("""
         border-radius: 15px; border: 1px solid #475569; margin-bottom: 20px;
     }
     .title-gold { color: #f1c40f; font-size: 32px; font-weight: 800; text-align: center; text-transform: uppercase; }
-    .stButton>button { border-radius: 10px; font-weight: bold; width: 100%; transition: 0.3s; height: 3em; }
+    .stButton>button { border-radius: 10px; font-weight: bold; width: 100%; transition: 0.3s; height: 3.5em; }
     
-    /* Màu sắc nút bấm */
+    /* Màu nút bấm chuẩn ảnh 844 */
     .btn-blue button { background: #2563eb !important; color: white !important; }
     .btn-green button { background: #10b981 !important; color: white !important; }
     .btn-purple button { background: #9333ea !important; color: white !important; }
@@ -30,143 +30,123 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. HÀM AI THÔNG MINH (CHỐNG LỖI 404 & 429) ---
+# --- 2. HỆ THỐNG XỬ LÝ AI THÔNG MINH (CHỐNG LỖI 404 & 429) ---
 def get_ai_response(api_key, prompt):
-    genai.configure(api_key=api_key)
-    # Fix cứng model 1.5-flash để đảm bảo tốc độ và không bị lỗi 404
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
     try:
+        genai.configure(api_key=api_key)
+        # Sửa lỗi 404: Sử dụng tên model ổn định nhất
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        err = str(e)
-        if "429" in err or "ResourceExhausted" in err:
-            return "ERROR_429"
-        return f"LỖI: {err}"
+        error_msg = str(e)
+        # Sửa lỗi 429: Bắt lỗi ResourceExhausted
+        if "429" in error_msg or "ResourceExhausted" in error_msg:
+            return "ERROR_QUOTA"
+        return f"LỖI: {error_msg}"
 
 # --- 3. GIAO DIỆN CHÍNH ---
 st.markdown('<p class="title-gold">🚀 TRỢ LÝ SEO VIDEO AI VĂN THẾ</p>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("🔑 CÀI ĐẶT API")
-    api_key = st.text_input("Gemini API Key", type="password")
-    st.info("Hệ thống đã được dọn sạch code thừa và tối ưu tốc độ xử lý.")
+    st.header("🔑 CÀI ĐẶT")
+    api_key = st.text_input("Nhập Gemini API Key", type="password")
+    st.info("Mẹo: Nếu dùng bản Free, hãy chờ 60 giây giữa mỗi lần tạo nội dung.")
 
-# KHỐI 1: NHẬP LIỆU
+# KHỐI 1: NHẬP LIỆU (Theo ảnh 843)
 with st.container():
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        lang = st.selectbox("Chọn ngôn ngữ", ["Tiếng Việt", "English"])
+        lang = st.selectbox("Ngôn ngữ", ["Tiếng Việt", "English"])
         ref = st.text_input("Link video đối thủ (Tùy chọn)")
     with c2:
-        kw = st.text_input("Từ khóa chính (Bắt buộc)")
-        channel = st.text_input("Link kênh của bạn (Tùy chọn)")
+        kw = st.text_input("Từ khóa chính (Bắt buộc)", placeholder="Ví dụ: cách làm bánh flan")
+        channel = st.text_input("Tên/Link kênh của bạn")
     
     if st.button("🚀 TẠO NỘI DUNG TỐI ƯU", use_container_width=True):
-        if kw and api_key:
-            with st.spinner("Đang cào dữ liệu và phân tích SEO..."):
-                prompt = f"""Bạn là chuyên gia SEO Youtube. Phân tích '{kw}' ({lang}). 
-                Trả về JSON thuần túy (không kèm markdown ```json):
+        if not (kw and api_key):
+            st.warning("Vui lòng nhập API Key và Từ khóa!")
+        else:
+            with st.spinner("Đang phân tích dữ liệu SEO chuyên sâu..."):
+                prompt = f"""Bạn là chuyên gia SEO Youtube. Hãy phân tích '{kw}' ({lang}). 
+                Trả về JSON thuần túy (không kèm lời dẫn):
                 {{
-                    "titles": ["10 tiêu đề hay"],
-                    "tags": ["25 tags"],
+                    "titles": ["10 tiêu đề thu hút"],
+                    "tags": ["25 tags SEO"],
                     "hashtags": ["10 hashtags"],
-                    "pinned": "mẫu bình luận ghim",
-                    "comment_rival": "Bình luận hay từ đối thủ gợi ý"
+                    "pinned": "Mẫu bình luận ghim kêu gọi đăng ký",
+                    "comment_rival": "Bình luận mẫu phản hồi khán giả"
                 }}"""
                 res = get_ai_response(api_key, prompt)
                 
-                if res == "ERROR_429":
-                    st.error("⚠️ Bạn đã dùng hết hạn mức API (Lỗi 429). Hãy đợi 60 giây rồi thử lại.")
-                elif res.startswith("LỖI:"):
+                if res == "ERROR_QUOTA":
+                    st.error("⚠️ Bạn đã dùng hết hạn mức API miễn phí (Lỗi 429). Hãy đợi 1 phút rồi thử lại.")
+                elif "LỖI:" in res:
                     st.error(res)
                 else:
                     try:
-                        # Lọc lấy JSON an toàn
+                        # Tách lấy phần JSON an toàn bằng Regex
                         json_match = re.search(r'\{.*\}', res, re.DOTALL)
                         if json_match:
                             st.session_state.seo_data = json.loads(json_match.group())
                             st.session_state.kw = kw
-                        else: 
-                            st.error("AI không trả về đúng định dạng. Hãy thử bấm lại nút.")
-                    except: 
-                        st.error("Lỗi phân tích dữ liệu (Parse Error). AI phản hồi sai định dạng.")
-        else: st.warning("Vui lòng điền đủ Từ khóa và API Key!")
+                        else: st.error("AI trả về định dạng không khớp. Hãy bấm lại nút.")
+                    except: st.error("Lỗi xử lý dữ liệu AI. Vui lòng thử lại.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# KHỐI 2: HIỂN THỊ KẾT QUẢ
+# KHỐI 2: HIỂN THỊ KẾT QUẢ (Theo ảnh 844, 845, 846)
 if 'seo_data' in st.session_state:
     data = st.session_state.seo_data
     
-    # Nút công cụ mở rộng
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
-    with col_btn1: 
-        st.markdown('<div class="btn-blue">', unsafe_allow_html=True)
-        st.button("🔍 Kiểm tra danh mục")
-        st.markdown('</div>', unsafe_allow_html=True)
-    with col_btn2: 
-        st.markdown('<div class="btn-green">', unsafe_allow_html=True)
-        st.button("🏷️ Thẻ tag video")
-        st.markdown('</div>', unsafe_allow_html=True)
-    with col_btn3: 
-        st.markdown('<div class="btn-purple">', unsafe_allow_html=True)
-        st.button("ℹ️ Thông tin video")
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Ba nút chức năng phụ (Màu chuẩn ảnh 844)
+    cb1, cb2, cb3 = st.columns(3)
+    with cb1: st.markdown('<div class="btn-blue">', unsafe_allow_html=True); st.button("🔍 Kiểm tra danh mục"); st.markdown('</div>', unsafe_allow_html=True)
+    with cb2: st.markdown('<div class="btn-green">', unsafe_allow_html=True); st.button("🏷️ Thẻ tag video"); st.markdown('</div>', unsafe_allow_html=True)
+    with cb3: st.markdown('<div class="btn-purple">', unsafe_allow_html=True); st.button("ℹ️ Thông tin video"); st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2.1 Tiêu đề & Tạo mô tả
+    # Hiển thị Tiêu đề
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader("🏅 10 TIÊU ĐỀ YOUTUBE HẤP DẪN")
-    # Sử dụng .get() để tránh lỗi nếu JSON trả về thiếu key
+    st.subheader(f"🏅 10 TIÊU ĐỀ CHO TỪ KHÓA: {st.session_state.kw.upper()}")
     for i, t in enumerate(data.get('titles', []), 1):
-        st.write(f"**{i}.** {t}")
+        st.write(f"**Tiêu đề {i}:** {t}")
     
     st.divider()
-    selected_title = st.selectbox("Chọn 1 tiêu đề để AI viết mô tả chi tiết:", data.get('titles', []))
-    
+    # Chọn tiêu đề tạo mô tả
+    sel_title = st.selectbox("Chọn tiêu đề để viết mô tả:", data.get('titles', []))
     if st.button("📝 VIẾT MÔ TẢ CHO TIÊU ĐỀ NÀY"):
-        with st.spinner("AI đang soạn thảo mô tả chuẩn SEO..."):
-            desc_prompt = f"Viết mô tả Youtube chuẩn SEO cho tiêu đề: '{selected_title}'. Bao gồm: Giới thiệu, Nội dung chính, Hashtags và Kêu gọi hành động."
+        with st.spinner("AI đang soạn mô tả chuẩn SEO..."):
+            desc_prompt = f"Viết mô tả Youtube chuẩn SEO cho: '{sel_title}'. Gồm: Giới thiệu, Nội dung chính, Kêu gọi hành động."
             desc_res = get_ai_response(api_key, desc_prompt)
-            
-            if desc_res == "ERROR_429":
-                st.error("⚠️ Quá tải API! Vui lòng đợi vài giây rồi thử lại.")
-            else:
-                st.session_state.generated_desc = desc_res
+            if desc_res == "ERROR_QUOTA": st.error("⚠️ Quá tải API! Hãy chờ 1 chút.")
+            else: st.session_state.gen_desc = desc_res
     
-    if 'generated_desc' in st.session_state:
-        st.markdown('<div class="desc-output">', unsafe_allow_html=True)
-        st.write(st.session_state.generated_desc)
-        st.markdown('</div>', unsafe_allow_html=True)
+    if 'gen_desc' in st.session_state:
+        st.markdown(f'<div class="desc-output">{st.session_state.gen_desc}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2.2 Tags & Hashtags & Bình luận
+    # Hiển thị Tags & Hashtags
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    c_a, c_b = st.columns([2, 1])
-    with c_a:
-        st.subheader("📊 25 TỪ KHÓA TỈ LỆ TÌM KIẾM CAO")
+    c_tags, c_hash = st.columns([2, 1])
+    with c_tags:
+        st.subheader("📊 25 TỪ KHÓA SEO")
         tags_html = "".join([f'<span class="tag-chip">{tag}</span>' for tag in data.get('tags', [])])
         st.markdown(tags_html, unsafe_allow_html=True)
-        st.text_area("Copy bộ Tag:", ", ".join(data.get('tags', [])), height=100)
-    with c_b:
+        st.text_area("Copy bộ Tag:", ", ".join(data.get('tags', [])), height=80)
+    with c_hash:
         st.subheader("#️⃣ HASHTAGS")
         st.code(" ".join(data.get('hashtags', [])))
-        st.subheader("💬 BÌNH LUẬN MẪU")
+        st.subheader("💬 GHIM BÌNH LUẬN")
         st.info(data.get('pinned', ''))
-        st.subheader("📌 BÌNH LUẬN ĐỐI THỦ")
-        st.caption(data.get('comment_rival', 'Đang cập nhật...'))
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 2.3 Công cụ tạo Prompt ảnh (Tích hợp thông minh hơn)
+    # Công cụ Thumbnail
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader("🎨 CÔNG CỤ TẠO PROMPT ẢNH THUMBNAIL (NANO BANANA 2)")
-    t_text = st.text_input("Văn bản muốn hiện trên ảnh", placeholder="Ví dụ: KIẾM 1000$ MỖI THÁNG")
-    style = st.selectbox("Phong cách ảnh", ["Realistic Photorealistic", "3D Disney Style", "Cyberpunk", "Minimalist"])
-    
-    if st.button("🖼️ TẠO MÃ PROMPT VẼ ẢNH"):
-        with st.spinner("Đang kết xuất Prompt chuyên nghiệp..."):
-            img_prompt = f"Youtube Thumbnail for '{selected_title}'. Art style: {style}. Bold focal text reading: '{t_text}'. High contrast, 8k resolution, cinematic lighting, eye-catching composition."
-            st.success("Copy mã dưới đây dán vào các công cụ AI vẽ ảnh (như Gemini 3 Flash Image / Nano Banana 2):")
-            st.code(img_prompt, language="markdown")
+    st.subheader("🖼️ Ý TƯỞNG THIẾT KẾ THUMBNAIL")
+    style = st.radio("Phong cách ảnh:", ["Ảnh Thật", "3D Render", "Điện Ảnh", "Hoạt Hình"], horizontal=True)
+    if st.button("🎨 TẠO PROMPT VẼ ẢNH"):
+        prompt_img = f"Tạo prompt vẽ ảnh Thumbnail cho tiêu đề '{sel_title}' phong cách {style}. Đưa ra các gợi ý về màu sắc, bố cục và chữ trên ảnh."
+        img_res = get_ai_response(api_key, prompt_img)
+        if img_res == "ERROR_QUOTA": st.error("⚠️ Hết hạn mức. Chờ 1 chút nhé!")
+        else: st.write(img_res)
     st.markdown('</div>', unsafe_allow_html=True)

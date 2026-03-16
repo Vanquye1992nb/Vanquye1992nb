@@ -4,7 +4,7 @@ import json
 import re
 import time
 
-# --- 1. CẤU HÌNH GIAO DIỆN (THEO MẪU GỐC) ---
+# --- 1. CẤU HÌNH GIAO DIỆN CHUẨN ---
 st.set_page_config(page_title="Trợ Lý SEO Youtube Văn Thế", layout="wide")
 
 st.markdown("""
@@ -15,57 +15,53 @@ st.markdown("""
         border-radius: 15px; border: 1px solid #475569; margin-bottom: 20px;
     }
     .title-gold { color: #f1c40f; font-size: 32px; font-weight: 800; text-align: center; text-transform: uppercase; }
-    .stButton>button { border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em; }
+    .tag-chip { background: #334155; color: #60a5fa; padding: 5px 12px; border-radius: 15px; display: inline-block; margin: 4px; border: 1px solid #475569; }
+    /* Màu nút bấm theo ảnh 844 */
     .btn-blue button { background: #2563eb !important; color: white !important; }
     .btn-green button { background: #10b981 !important; color: white !important; }
     .btn-purple button { background: #9333ea !important; color: white !important; }
-    .tag-chip { 
-        background: #334155; color: #60a5fa; padding: 5px 12px; 
-        border-radius: 15px; display: inline-block; margin: 4px; border: 1px solid #475569;
-    }
-    .desc-output { background: #0f172a; padding: 15px; border-radius: 10px; border-left: 5px solid #f1c40f; white-space: pre-wrap; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. HÀM XỬ LÝ AI "BẤT BẠI" (CHỐNG 404 & 429) ---
-def call_gemini_smart(api_key, prompt):
+# --- 2. HỆ THỐNG GỌI AI ĐA TẦNG (FIX LỖI 404 & 429) ---
+def call_ai_ultimate(api_key, prompt):
     try:
         genai.configure(api_key=api_key)
         
-        # Thử lần lượt các model để tránh lỗi 404 (Model Not Found)
-        models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+        # Danh sách model dự phòng để tránh lỗi 404
+        # Thử nghiệm với các tên gọi model phổ biến nhất
+        model_names = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro']
         
-        last_error = ""
-        for model_name in models_to_try:
+        for name in model_names:
             try:
-                model = genai.GenerativeModel(model_name)
-                # Cơ chế Retry khi gặp lỗi 429 (Resource Exhausted)
-                for attempt in range(2):
+                model = genai.GenerativeModel(name)
+                # Cơ chế chờ đợi nếu gặp lỗi 429
+                for i in range(2):
                     try:
                         response = model.generate_content(prompt)
                         if response and response.text:
                             return response.text
                     except Exception as e:
                         if "429" in str(e):
-                            time.sleep(3) # Đợi 3 giây rồi thử lại
+                            time.sleep(5) # Nghỉ 5 giây nếu hết hạn mức
                             continue
                         raise e
             except Exception as e:
-                last_error = str(e)
-                continue # Thử model tiếp theo
+                if "404" in str(e): # Nếu không thấy model này, thử model tiếp theo
+                    continue
+                return f"LỖI: {str(e)}"
         
-        if "429" in last_error: return "LIMIT_REACHED"
-        return f"LỖI: {last_error}"
+        return "LỖI: Không thể kết nối với bất kỳ Model Gemini nào. Hãy kiểm tra lại API Key."
     except Exception as e:
-        return f"HỆ THỐNG LỖI: {str(e)}"
+        return f"LỖI HỆ THỐNG: {str(e)}"
 
-# --- 3. GIAO DIỆN CHÍNH ---
+# --- 3. GIAO DIỆN CHÍNH (THEO ẢNH 843) ---
 st.markdown('<p class="title-gold">🚀 TRỢ LÝ SEO VIDEO AI VĂN THẾ</p>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("🔑 CÀI ĐẶT API")
-    api_key = st.text_input("Nhập Gemini API Key", type="password")
-    st.info("Bản cập nhật đã sửa lỗi model 404 và trích xuất JSON.")
+    st.header("⚙️ CÀI ĐẶT")
+    key = st.text_input("Gemini API Key", type="password")
+    st.info("Sử dụng model Gemini 1.5 Flash ổn định.")
 
 # KHỐI NHẬP LIỆU
 with st.container():
@@ -73,89 +69,84 @@ with st.container():
     c1, c2 = st.columns(2)
     with c1:
         lang = st.selectbox("Ngôn ngữ", ["Tiếng Việt", "English"])
-        ref = st.text_input("Link đối thủ (Tùy chọn)")
+        ref_link = st.text_input("Link video đối thủ (Tùy chọn)")
     with c2:
-        kw = st.text_input("Từ khóa chính (Bắt buộc)")
-        channel = st.text_input("Tên/Link kênh")
+        keyword = st.text_input("Từ khóa chính (Bắt buộc)")
+        my_channel = st.text_input("Tên kênh của bạn")
     
-    if st.button("🚀 BẮT ĐẦU PHÂN TÍCH SEO", type="primary"):
-        if not api_key or not kw:
-            st.warning("Vui lòng nhập API Key và Từ khóa.")
+    if st.button("🚀 TẠO NỘI DUNG TỐI ƯU", use_container_width=True):
+        if not key or not keyword:
+            st.error("Thiếu API Key hoặc Từ khóa!")
         else:
-            with st.spinner("AI đang làm việc..."):
-                prompt = f"""SEO Youtube '{kw}' ({lang}). Cần JSON chuẩn (không Markdown):
+            with st.spinner("Đang phân tích dữ liệu..."):
+                main_prompt = f"""Bạn là một chuyên gia SEO YouTube. Hãy phân tích từ khóa '{keyword}' ({lang}). 
+                Yêu cầu trả về dữ liệu dưới dạng JSON (không có markdown):
                 {{
-                    "titles": ["10 tiêu đề"],
-                    "tags": ["25 tags"],
+                    "titles": ["10 tiêu đề thu hút"],
+                    "tags": ["25 tags SEO"],
                     "hashtags": ["10 hashtags"],
-                    "pinned": "ghim",
-                    "comment_rival": "mẫu"
+                    "pinned": "Bình luận ghim mẫu"
                 }}"""
-                res = call_gemini_smart(api_key, prompt)
+                res = call_ai_ultimate(key, main_prompt)
                 
-                if res == "LIMIT_REACHED":
-                    st.error("⚠️ Hết hạn mức API miễn phí. Vui lòng đợi 60 giây.")
-                elif res.startswith("LỖI"):
+                if "LỖI" in res:
                     st.error(res)
                 else:
                     try:
-                        # Dọn dẹp văn bản để lấy đúng JSON
-                        clean_json = re.search(r'\{.*\}', res, re.DOTALL).group()
-                        st.session_state.seo_data = json.loads(clean_json)
-                        st.session_state.current_kw = kw
+                        # Làm sạch chuỗi để lấy đúng JSON
+                        json_str = re.search(r'\{.*\}', res, re.DOTALL).group()
+                        st.session_state.seo_res = json.loads(json_str)
+                        st.session_state.saved_kw = keyword
                     except:
-                        st.error("AI phản hồi sai định dạng dữ liệu. Hãy thử lại.")
+                        st.error("Dữ liệu AI trả về bị lỗi định dạng. Thử lại sau 10 giây.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# KHỐI KẾT QUẢ
-if 'seo_data' in st.session_state:
-    data = st.session_state.seo_data
+# KHỐI HIỂN THỊ KẾT QUẢ
+if 'seo_res' in st.session_state:
+    data = st.session_state.seo_res
     
-    # 3 Nút chức năng mẫu ảnh 844
-    cb1, cb2, cb3 = st.columns(3)
-    with cb1: st.markdown('<div class="btn-blue">', unsafe_allow_html=True); st.button("🔍 Kiểm tra danh mục"); st.markdown('</div>', unsafe_allow_html=True)
-    with cb2: st.markdown('<div class="btn-green">', unsafe_allow_html=True); st.button("🏷️ Thẻ tag video"); st.markdown('</div>', unsafe_allow_html=True)
-    with cb3: st.markdown('<div class="btn-purple">', unsafe_allow_html=True); st.button("ℹ️ Thông tin video"); st.markdown('</div>', unsafe_allow_html=True)
+    # Nhóm nút công cụ theo ảnh 844
+    col_b1, col_b2, col_b3 = st.columns(3)
+    with col_b1: st.markdown('<div class="btn-blue">', unsafe_allow_html=True); st.button("🔍 Kiểm tra danh mục"); st.markdown('</div>', unsafe_allow_html=True)
+    with col_b2: st.markdown('<div class="btn-green">', unsafe_allow_html=True); st.button("🏷️ Thẻ tag video"); st.markdown('</div>', unsafe_allow_html=True)
+    with col_b3: st.markdown('<div class="btn-purple">', unsafe_allow_html=True); st.button("ℹ️ Thông tin video"); st.markdown('</div>', unsafe_allow_html=True)
 
-    # Hiển thị Tiêu đề & Mô tả
+    # Tiêu đề
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader(f"🏅 KẾT QUẢ CHO: {st.session_state.current_kw.upper()}")
-    titles = data.get('titles', [])
-    for i, t in enumerate(titles, 1):
+    st.subheader(f"🏅 10 TIÊU ĐỀ SEO CHO: {st.session_state.saved_kw.upper()}")
+    for i, t in enumerate(data.get('titles', []), 1):
         st.write(f"**{i}.** {t}")
     
     st.divider()
-    sel_title = st.selectbox("Chọn tiêu đề để viết mô tả:", titles)
-    if st.button("📝 VIẾT MÔ TẢ SEO CHI TIẾT"):
-        with st.spinner("Đang soạn..."):
-            d_prompt = f"Viết mô tả Youtube chuẩn SEO cho: {sel_title}"
-            desc_res = call_gemini_smart(api_key, d_prompt)
-            st.session_state.final_desc = desc_res
-            
+    selected_title = st.selectbox("Chọn tiêu đề để tạo mô tả:", data.get('titles', []))
+    if st.button("📝 TẠO MÔ TẢ CHI TIẾT"):
+        with st.spinner("AI đang soạn mô tả..."):
+            desc_p = f"Viết mô tả YouTube chuẩn SEO cho video tiêu đề: '{selected_title}'"
+            st.session_state.final_desc = call_ai_ultimate(key, desc_p)
+    
     if 'final_desc' in st.session_state:
-        st.markdown(f'<div class="desc-output">{st.session_state.final_desc}</div>', unsafe_allow_html=True)
+        st.info(st.session_state.final_desc)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Tags & Hashtags
+    # Thẻ Tag & Hashtag
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    col_tags, col_extra = st.columns([2, 1])
-    with col_tags:
+    cl, cr = st.columns([2, 1])
+    with cl:
         st.subheader("📊 25 TỪ KHÓA SEO")
-        tags = data.get('tags', [])
-        st.markdown("".join([f'<span class="tag-chip">{tag}</span>' for tag in tags]), unsafe_allow_html=True)
-        st.text_area("Copy bộ Tag:", ", ".join(tags), height=100)
-    with col_extra:
+        tags_html = "".join([f'<span class="tag-chip">{tag}</span>' for tag in data.get('tags', [])])
+        st.markdown(tags_html, unsafe_allow_html=True)
+        st.text_area("Copy tags:", ", ".join(data.get('tags', [])), height=70)
+    with cr:
         st.subheader("#️⃣ HASHTAGS")
         st.code(" ".join(data.get('hashtags', [])))
-        st.subheader("💬 BÌNH LUẬN GHIM")
-        st.info(data.get('pinned', ''))
+        st.subheader("📌 BÌNH LUẬN GHIM")
+        st.caption(data.get('pinned', ''))
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Thumbnail Tool (Nano Banana 2 Prompt)
+    # Thumbnail
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader("🎨 Ý TƯỞNG THUMBNAIL (NANO BANANA 2)")
-    t_text = st.text_input("Văn bản chính trên ảnh", value="VĂN THẾ SEO")
-    if st.button("🖼️ TẠO PROMPT ẢNH"):
-        p_thumb = f"Tạo prompt vẽ ảnh thumbnail Youtube cho tiêu đề '{sel_title}' có chữ '{t_text}'"
-        st.code(call_gemini_smart(api_key, p_thumb))
+    st.subheader("🎨 Ý TƯỞNG THUMBNAIL")
+    if st.button("✨ TẠO PROMPT ẢNH"):
+        prompt_image = f"Tạo prompt vẽ ảnh thumbnail cho video: {selected_title}"
+        st.code(call_ai_ultimate(key, prompt_image))
     st.markdown('</div>', unsafe_allow_html=True)

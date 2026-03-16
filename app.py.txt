@@ -1,0 +1,72 @@
+import streamlit as st
+import google.generativeai as genai
+import pandas as pd
+
+# --- CẤU HÌNH GIAO DIỆN ---
+st.set_page_config(page_title="Tool Tìm Key Youtube", layout="wide")
+
+# Tùy chỉnh CSS để giống ảnh mẫu
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; color: white; }
+    .stButton>button { width: 100%; background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%); color: black; font-weight: bold; border: none; border-radius: 10px; height: 3em; }
+    .stTextInput>div>div>input { background-color: #1e2130; color: white; border-radius: 10px; border: 1px solid #30363d; }
+    .header-text { color: #f1c40f; text-align: center; font-weight: bold; font-size: 32px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- PHẦN ĐẦU TRANG ---
+st.markdown('<p class="header-text">🖥️ Tool Tìm Key Youtube Văn Thế Web AI</p>', unsafe_allow_html=True)
+st.write("<p style='text-align: center; color: gray;'>Công cụ tự động hóa nghiên cứu từ khóa nâng cấp bởi Gemini AI</p>", unsafe_allow_html=True)
+
+# --- NHẬP API KEY ---
+with st.sidebar:
+    st.header("Cấu hình")
+    api_key = st.text_input("Nhập Gemini API Key:", type="password")
+    st.info("Lấy key tại: aistudio.google.com")
+
+# --- FORM NHẬP LIỆU (Giống ảnh mẫu) ---
+col1, col2 = st.columns(2)
+
+with col1:
+    chu_de = st.text_input("# Chủ Đề (Bắt buộc)", placeholder="vd: Sinh tồn hoang dã, Mukbang AI")
+    st.button("💡 Danh sách gợi ý", help="Nhấn để AI gợi ý thêm chủ đề")
+    tu_khoa = st.text_input("# Từ Khóa Chính (Tùy chọn)", placeholder="vd: xây nhà trú ẩn, ăn đồ siêu cay")
+
+with col2:
+    ngon_ngu = st.selectbox("🌐 Ngôn Ngữ", ["Tiếng Việt", "English", "Japanese", "Korean"])
+    doi_tuong = st.selectbox("👥 Đối Tượng Mục Tiêu", ["View Việt", "View Quốc Tế", "View Mỹ"])
+    so_luong = st.number_input("🔍 Số lượng từ khóa", min_value=1, max_value=50, value=10)
+
+# --- XỬ LÝ KHI NHẤN NÚT ---
+if st.button("🚀 TÌM KIẾM TỪ KHÓA NÂNG CAO"):
+    if not api_key:
+        st.error("Vui lòng nhập API Key ở thanh bên trái!")
+    elif not chu_de:
+        st.warning("Vui lòng nhập chủ đề!")
+    else:
+        with st.spinner('AI đang phân tích dữ liệu thị trường...'):
+            try:
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                prompt = f"""Hãy đóng vai chuyên gia SEO Youtube. Tìm {so_luong} từ khóa ngách cho chủ đề '{chu_de}' 
+                với từ khóa chính là '{tu_khoa}'. Ngôn ngữ {ngon_ngu}, mục tiêu {doi_tuong}. 
+                Trả về kết quả duy nhất là một bảng gồm các cột: Từ khóa, Độ khó (0-100), Lượt tìm kiếm, Xu hướng."""
+                
+                response = model.generate_content(prompt)
+                
+                st.success("Đã tìm thấy từ khóa tiềm năng!")
+                st.markdown(response.text) # Hiển thị bảng kết quả
+                
+                # Tính năng nâng cấp: Gợi ý tiêu đề
+                st.subheader("📝 Gợi ý Tiêu đề Video chuẩn SEO:")
+                title_prompt = f"Dựa vào các từ khóa trên, viết 3 tiêu đề video cực kỳ thu hút cho chủ đề {chu_de}."
+                titles = model.generate_content(title_prompt)
+                st.info(titles.text)
+                
+            except Exception as e:
+                st.error(f"Lỗi: {e}")
+
+st.markdown("---")
+st.caption("Ứng dụng được phát triển với sự hỗ trợ của Gemini AI - 2026")

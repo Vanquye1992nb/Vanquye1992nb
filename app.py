@@ -1,337 +1,163 @@
 import streamlit as st
-import google.generativeai as genai
-import json
-import time
+import random
 
-# ==============================
-# CONFIG UI
-# ==============================
+st.set_page_config(
+    page_title="YouTube SEO Tool PRO",
+    layout="wide"
+)
 
-st.set_page_config(page_title="AI SEO Youtube", layout="wide")
+st.title("🎥 Chuyên Gia SEO Video")
 
-st.markdown("""
-<style>
-.stApp{
-background-color:#1e212b;
-color:white;
-}
+st.write("Đưa video của bạn lên top tìm kiếm YouTube")
 
-.card{
-background:rgba(30,41,59,0.7);
-padding:25px;
-border-radius:15px;
-border:1px solid #475569;
-margin-bottom:20px;
-}
-
-.title{
-text-align:center;
-font-size:34px;
-font-weight:800;
-color:#f1c40f;
-}
-
-.tag{
-background:#334155;
-padding:6px 12px;
-border-radius:12px;
-margin:4px;
-display:inline-block;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="title">🚀 AI SEO YOUTUBE TOOL</p>', unsafe_allow_html=True)
-
-# ==============================
-# SIDEBAR
-# ==============================
-
-with st.sidebar:
-    st.header("🔑 API KEY")
-    api_key = st.text_input("Gemini API Key", type="password")
-
-# ==============================
-# LOAD MODEL
-# ==============================
-
-@st.cache_resource
-def load_model(key):
-
-    genai.configure(api_key=key)
-
-    return genai.GenerativeModel("gemini-2.0-flash")
-
-# ==============================
-# JSON PARSER
-# ==============================
-
-def extract_json(text):
-
-    try:
-        start = text.index("{")
-        end = text.rindex("}") + 1
-        return json.loads(text[start:end])
-
-    except:
-        return None
-
-# ==============================
-# AI GENERATE
-# ==============================
-
-def ai_generate(prompt):
-
-    model = load_model(api_key)
-
-    for i in range(3):
-
-        try:
-
-            response = model.generate_content(prompt)
-
-            return response.text
-
-        except Exception as e:
-
-            if "429" in str(e):
-
-                time.sleep(5)
-
-            else:
-
-                return f"LỖI: {e}"
-
-    return "ERROR_429"
-
-# ==============================
-# INPUT FORM
-# ==============================
-
-st.markdown('<div class="card">', unsafe_allow_html=True)
-
-col1,col2 = st.columns(2)
+# INPUT
+col1, col2 = st.columns(2)
 
 with col1:
-
     language = st.selectbox(
-        "Ngôn ngữ",
-        ["Vietnamese","English"]
-    )
-
-    competitor = st.text_input(
-        "Link video đối thủ (optional)"
+        "Chọn ngôn ngữ",
+        ["Tiếng Việt", "English"]
     )
 
 with col2:
-
     keyword = st.text_input(
-        "Từ khóa chính"
+        "Từ khóa chính (bắt buộc)"
     )
 
-    channel = st.text_input(
-        "Link kênh của bạn (optional)"
-    )
+competitor = st.text_input("Link video đối thủ (tùy chọn)")
+channel = st.text_input("Link kênh YouTube của bạn (tùy chọn)")
 
-generate = st.button("🚀 TẠO SEO VIDEO")
+# BUTTON
+if st.button("Tạo Nội Dung Tối Ưu"):
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ==============================
-# GENERATE SEO
-# ==============================
-
-if generate:
-
-    if keyword == "" or api_key == "":
-
-        st.warning("Vui lòng nhập keyword và API key")
-
-    else:
-
-        with st.spinner("AI đang phân tích SEO..."):
-
-            prompt = f"""
-
-You are a professional YouTube SEO expert.
-
-Keyword: {keyword}
-Language: {language}
-
-Return ONLY JSON:
-
-{{
-"titles":["10 viral youtube titles"],
-"tags":["25 high search volume youtube tags"],
-"hashtags":["10 trending hashtags"],
-"pinned":"Pinned comment to increase engagement",
-"comment_rival":"Example smart comment to leave on competitor video"
-}}
-
-Rules:
-Titles under 70 characters
-Tags optimized for YouTube search
-"""
-
-            if competitor:
-
-                prompt += f"\nAnalyze competitor video: {competitor}"
-
-            result = ai_generate(prompt)
-
-            if result == "ERROR_429":
-
-                st.error("API quá tải. Hãy thử lại sau.")
-
-            elif result.startswith("LỖI"):
-
-                st.error(result)
-
-            else:
-
-                data = extract_json(result)
-
-                if data:
-
-                    st.session_state.seo = data
-
-                else:
-
-                    st.error("AI trả sai định dạng JSON")
-
-# ==============================
-# OUTPUT
-# ==============================
-
-if "seo" in st.session_state:
-
-    data = st.session_state.seo
+    st.header(f"KẾT QUẢ TỐI ƯU CHO TỪ KHÓA: {keyword}")
 
     # TITLES
+    st.subheader("🔥 Tiêu đề YouTube hấp dẫn")
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    titles = [
+        f"The Truth About {keyword}",
+        f"Unveiling {keyword}: Secrets Revealed",
+        f"{keyword} Explained in 10 Minutes",
+        f"The Lost World of {keyword}",
+        f"Beyond Dinosaurs: {keyword}",
+        f"Amazing {keyword} Facts",
+        f"The Rise of {keyword}",
+        f"{keyword} Documentary",
+        f"The History of {keyword}",
+        f"What Scientists Discovered About {keyword}"
+    ]
 
-    st.subheader("🏆 10 Tiêu đề gợi ý")
+    for t in titles:
+        st.write("•", t)
 
-    titles = data.get("titles",[])
+    # KEYWORDS
+    st.subheader("🔎 25 TỪ KHÓA TÌM KIẾM CAO")
 
-    for i,t in enumerate(titles,1):
+    keywords = [
+        keyword,
+        "prehistoric earth",
+        "ancient earth",
+        "earth history",
+        "paleontology",
+        "dinosaurs",
+        "fossils",
+        "ancient animals",
+        "evolution of life",
+        "geological timeline",
+        "cambrian explosion",
+        "permian extinction",
+        "mesozoic era",
+        "triassic period",
+        "jurassic period",
+        "cretaceous period",
+        "ancient creatures",
+        "earth evolution",
+        "science documentary",
+        "ancient oceans",
+        "life million years ago",
+        "prehistoric animals",
+        "history of earth",
+        "earth timeline",
+        "ancient life"
+    ]
 
-        st.write(f"{i}. {t}")
+    st.write(", ".join(keywords))
 
-    selected_title = st.selectbox(
-        "Chọn tiêu đề để viết mô tả",
-        titles
-    )
+    # DESCRIPTION
+    st.subheader("📝 YouTube Description")
 
-    if st.button("📝 Viết mô tả SEO"):
+    description = f"""
+In this video we explore **{keyword}** and uncover the secrets of ancient Earth.
 
-        desc_prompt = f"""
-Write SEO YouTube description for:
+Watch to discover:
+- Amazing facts about {keyword}
+- The history behind it
+- How it shaped the planet
 
-{selected_title}
-
-Include:
-Intro
-Main content
-Call to action
-Hashtags
+Subscribe for more science documentaries.
 """
 
-        desc = ai_generate(desc_prompt)
+    st.write(description)
 
-        if desc:
+    # PINNED COMMENT
+    st.subheader("💬 Bình luận ghim")
 
-            st.session_state.desc = desc
+    comment = f"""
+What do you think about **{keyword}**?
 
-    if "desc" in st.session_state:
+Let us know in the comments below!
 
-        st.text_area(
-            "Description",
-            st.session_state.desc,
-            height=200
-        )
+👍 Like  
+🔔 Subscribe  
+📢 Share with friends
+"""
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # TAGS
-
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-
-    st.subheader("🏷️ Tags SEO")
-
-    tags = data.get("tags",[])
-
-    for tag in tags:
-
-        st.markdown(
-            f'<span class="tag">{tag}</span>',
-            unsafe_allow_html=True
-        )
-
-    st.text_area(
-        "Copy tags",
-        ", ".join(tags),
-        height=100
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.write(comment)
 
     # HASHTAGS
+    st.subheader("🏷 Hashtags")
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    hashtags = [
+        f"#{keyword}",
+        "#science",
+        "#history",
+        "#earth",
+        "#documentary"
+    ]
 
-    st.subheader("#️⃣ Hashtags")
+    st.write(" ".join(hashtags))
 
-    st.code(" ".join(data.get("hashtags",[])))
+    # THUMBNAIL
+    st.subheader("🎨 Công cụ tạo Thumbnail")
 
-    st.subheader("💬 Pinned comment")
+    thumb_text = st.text_input("Văn bản trên Thumbnail")
 
-    st.info(data.get("pinned",""))
+    style = st.selectbox(
+        "Phong cách",
+        ["Ảnh thật", "3D Render", "Điện ảnh", "Hoạt hình", "Tối giản"]
+    )
 
-    st.subheader("📌 Comment đối thủ")
+    if st.button("Tạo Prompt Thumbnail"):
 
-    st.write(data.get("comment_rival",""))
+        prompt = f"""
+Viral YouTube thumbnail
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ==============================
-# THUMBNAIL PROMPT
-# ==============================
-
-st.markdown('<div class="card">', unsafe_allow_html=True)
-
-st.subheader("🎨 Thumbnail Prompt Generator")
-
-thumb_text = st.text_input(
-    "Text trên thumbnail"
-)
-
-style = st.selectbox(
-"Phong cách ảnh",
-[
-"Photorealistic",
-"3D Disney",
-"Cyberpunk",
-"Minimalist"
-]
-)
-
-if st.button("🖼️ Tạo Prompt Thumbnail"):
-
-    prompt = f"""
-YouTube thumbnail for video about {keyword}
-
+Topic: {keyword}
+Text: {thumb_text}
 Style: {style}
 
-Big bold text: {thumb_text}
-
-High contrast
-8k resolution
-Cinematic lighting
-Eye catching
+High contrast lighting
+Shocked face
+Bright colors
+Professional YouTube thumbnail
 """
 
-    st.code(prompt)
+        st.code(prompt)
 
-st.markdown('</div>', unsafe_allow_html=True)
+    # DOWNLOAD
+    st.download_button(
+        "⬇ Tải toàn bộ nội dung",
+        data=str(titles) + str(keywords) + description + comment,
+        file_name="youtube_seo.txt"
+    )

@@ -1,83 +1,131 @@
 import streamlit as st
 import google.generativeai as genai
-import pandas as pd
+import json
+import re
 
-# --- CẤU HÌNH GIAO DIỆN DARK MODE ---
-st.set_page_config(page_title="Tool Tìm Key Youtube Văn Thế Web", layout="wide")
+# --- CẤU HÌNH GIAO DIỆN CHUẨN (Fix lỗi mất tiêu đề) ---
+st.set_page_config(page_title="Trợ Lý SEO Youtube Văn Thế", layout="centered")
 
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: white; }
-    .stButton>button { 
-        width: 100%; 
-        background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%); 
-        color: black; font-weight: bold; border: none; border-radius: 10px; height: 3.5em;
+    .stApp { background-color: #2b313e; color: #ffffff; }
+    
+    /* Hiển thị tiêu đề các ô nhập liệu trắng rõ */
+    label, .stMarkdown p { 
+        color: #ffffff !important; 
+        font-weight: 600 !important;
+        display: block !important;
+        margin-bottom: 5px !important;
     }
-    .header-text { color: #f1c40f; text-align: center; font-weight: bold; font-size: 35px; margin-bottom: 0px; }
-    .sub-text { text-align: center; color: #888; margin-bottom: 30px; }
+
+    .card { 
+        background-color: #363d4a; padding: 25px; 
+        border-radius: 12px; border: 1px solid #4a5568; margin-bottom: 20px;
+    }
+
+    .title-gold { color: #f1c40f; font-size: 30px; font-weight: 800; text-align: center; }
+
+    /* Nút Tạo Nội Dung (Xanh dương) */
+    .stButton>button { 
+        background: #2563eb !important; color: white !important; 
+        border-radius: 8px; height: 3.5em; font-weight: bold; border: none;
+    }
+
+    /* Thẻ tag (Ảnh 846) */
+    .tag-chip { 
+        background: #4a5568; color: #e2e8f0; padding: 6px 14px; 
+        border-radius: 20px; display: inline-block; margin: 4px; border: 1px solid #718096;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- HEADER ---
-st.markdown('<p class="header-text">🖥️ Tool Tìm Key Youtube Văn Thế Web AI</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-text">Công cụ tự động hóa nghiên cứu từ khóa nâng cấp bởi Gemini AI</p>', unsafe_allow_html=True)
+# --- HÀM AI: FIX 404 & FIX KHÔNG RA TIN ---
+def process_seo(api_key, keyword):
+    try:
+        genai.configure(api_key=api_key)
+        # Sử dụng model định danh đầy đủ để tránh 404
+        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+        
+        prompt = f"""
+        Nhiệm vụ: SEO Youtube cho từ khóa '{keyword}'.
+        Hãy trả về 1 chuỗi JSON duy nhất, không có văn bản thừa:
+        {{
+            "trend": "mô tả xu hướng hiện tại",
+            "titles": ["tiêu đề 1", "tiêu đề 2", ..., "tiêu đề 10"],
+            "tags": ["tag 1", "tag 2", ..., "tag 25"],
+            "desc": "mô tả video chuẩn SEO",
+            "comment": "bình luận ghim hay"
+        }}
+        """
+        response = model.generate_content(prompt)
+        
+        # Dùng Regex để lấy đúng phần JSON (Fix lỗi không ra tin)
+        json_str = re.search(r'\{.*\}', response.text, re.DOTALL).group()
+        return json.loads(json_str)
+    except Exception as e:
+        st.error(f"Lỗi: {str(e)}")
+        return None
 
-# --- SIDEBAR: CẤU HÌNH API ---
+if 'step' not in st.session_state: st.session_state.step = 1
+
 with st.sidebar:
-    st.header("⚙️ Cấu hình hệ thống")
-    api_key = st.text_input("Nhập Gemini API Key:", type="password", help="Lấy key tại aistudio.google.com")
-    st.markdown("---")
-    st.write("📌 **Hướng dẫn:**")
-    st.write("1. Dán API Key vào ô trên")
-    st.write("2. Nhập chủ đề video")
-    st.write("3. Nhấn 'Tìm kiếm' và đợi AI trả kết quả")
+    st.header("🔑 Cấu hình")
+    api_key = st.text_input("Gemini API Key:", type="password")
+    if st.button("🔄 Làm mới ứng dụng"):
+        st.session_state.clear()
+        st.rerun()
 
-# --- LAYOUT CHÍNH ---
-col1, col2 = st.columns(2)
+# --- BƯỚC 1: FORM NHẬP LIỆU (Ảnh 843) ---
+if st.session_state.step == 1:
+    st.markdown('<p class="title-gold">Chuyên Gia SEO Video</p>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.selectbox("Chọn ngôn ngữ", ["Tiếng Việt", "English"], key="lang")
+            st.text_input("Link video đối thủ (Tùy chọn)", placeholder="Dán link tại đây...", key="ref")
+        with c2:
+            kw = st.text_input("Từ khóa chính (Bắt buộc)", placeholder="Ví dụ: cách nấu phở", key="kw_input")
+            st.text_input("Link kênh của bạn", placeholder="Dán link kênh...", key="chan")
+        
+        if st.button("🚀 TẠO NỘI DUNG TỐI ƯU"):
+            if kw and api_key:
+                with st.spinner("Đang tra cứu dữ liệu..."):
+                    result = process_seo(api_key, kw)
+                    if result:
+                        st.session_state.data = result
+                        st.session_state.kw = kw
+                        st.session_state.step = 2
+                        st.rerun()
+            else: st.warning("Vui lòng nhập đầy đủ Từ khóa và API Key!")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-with col1:
-    chu_de = st.text_input("# Chủ Đề (Bắt buộc)", placeholder="vd: Hoạt hình, Mukbang AI, Sinh tồn")
-    st.button("💡 Danh sách gợi ý chủ đề")
-    tu_khoa_phu = st.text_input("# Từ Khóa Chính (Tùy chọn)", placeholder="vd: tu tiên, rèn luyện")
+# --- BƯỚC 2: KẾT QUẢ (Ảnh 844, 845, 846) ---
+if st.session_state.step >= 2:
+    st.markdown(f"### 📈 KẾT QUẢ SEO: {st.session_state.kw.upper()}")
+    
+    # 3 Nút chức năng (Ảnh 844)
+    st.write("🚀 CÔNG CỤ PHÂN TÍCH:")
+    bc1, bc2, bc3 = st.columns(3)
+    bc1.button("🔵 Danh mục", type="primary")
+    bc2.button("🟢 Thẻ Tag", type="secondary")
+    bc3.button("🟣 Thông tin", type="secondary")
 
-with col2:
-    ngon_ngu = st.selectbox("🌐 Ngôn Ngữ", ["Tiếng Việt", "English", "Japanese"])
-    doi_tuong = st.selectbox("👥 Đối Tượng Mục Tiêu", ["View Việt", "View Quốc Tế"])
-    so_luong = st.slider("🔍 Số lượng từ khóa muốn tìm", 5, 30, 10)
+    # 10 Tiêu đề (Ảnh 845)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.write("🏅 **10 TIÊU ĐỀ YOUTUBE HẤP DẪN**")
+    for t in st.session_state.data.get('titles', []):
+        st.info(t)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- XỬ LÝ DỮ LIỆU ---
-if st.button("🚀 TÌM KIẾM TỪ KHÓA NÂNG CAO"):
-    if not api_key:
-        st.error("❌ Vui lòng nhập API Key ở cột bên trái!")
-    elif not chu_de:
-        st.warning("⚠️ Bạn chưa nhập chủ đề video!")
-    else:
-        try:
-            # Khởi tạo AI
-            genai.configure(api_key=api_key)
-            # Sử dụng gemini-1.5-flash với cấu hình chuẩn
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            with st.spinner('🎯 AI đang phân tích thị trường YouTube...'):
-                prompt = f"""
-                Bạn là một chuyên gia SEO YouTube chuyên nghiệp. 
-                Hãy phân tích chủ đề '{chu_de}' với từ khóa phụ '{tu_khoa_phu}'.
-                Tìm {so_luong} từ khóa tiềm năng cho {doi_tuong} bằng {ngon_ngu}.
-                Yêu cầu: Trả về kết quả dưới dạng BẢNG gồm các cột: 
-                STT, Từ khóa, Độ khó (%), Lượng tìm kiếm, Xu hướng.
-                Cuối cùng hãy đưa ra 1 lời khuyên chiến lược để video này lên xu hướng.
-                """
-                
-                response = model.generate_content(prompt)
-                
-                # Hiển thị kết quả
-                st.success("✅ Đã phân tích xong!")
-                st.markdown("### 📊 Bảng phân tích từ khóa ngách:")
-                st.markdown(response.text)
-                
-        except Exception as e:
-            st.error(f"❌ Lỗi: {str(e)}")
-            st.info("Mẹo: Nếu gặp lỗi 404, hãy kiểm tra lại API Key hoặc thử lại sau ít phút.")
-
-st.markdown("---")
-st.caption("© 2026 Developed for Van The Web Team - Powered by Gemini Pro v1.5")
+    # 25 Tags (Ảnh 846)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.write("📊 **25 TỪ KHÓA TÌM KIẾM CAO**")
+    tags_html = "".join([f'<span class="tag-chip">{tag}</span>' for tag in st.session_state.data.get('tags', [])])
+    st.markdown(tags_html, unsafe_allow_html=True)
+    
+    st.divider()
+    if st.button("🔄 Tạo từ khóa khác"):
+        st.session_state.step = 1
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)

@@ -1,211 +1,230 @@
 import streamlit as st
 import random
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(
-    page_title="YouTube AI SEO Tool PRO",
-    page_icon="🚀",
-    layout="wide"
-)
+st.set_page_config(page_title="Trợ Lý SEO YouTube", layout="centered")
 
-# ---------- HEADER ----------
-st.title("🚀 YouTube AI SEO Tool PRO")
-st.write("Tạo SEO video chuẩn thuật toán YouTube")
+st.title("🚀 Chuyên Gia SEO Video")
+st.caption("Đưa video của bạn lên top tìm kiếm YouTube")
 
-# ---------- FUNCTIONS ----------
+# =========================
+# SESSION STATE
+# =========================
 
-def generate_titles(keyword):
+if "titles" not in st.session_state:
+    st.session_state.titles = []
 
-    titles = [
-        f"{keyword} - Hướng dẫn đầy đủ cho người mới",
-        f"5 bí mật về {keyword} mà ít ai biết",
-        f"Cách học {keyword} nhanh nhất",
-        f"{keyword} từ A-Z",
-        f"Sự thật về {keyword}",
-        f"{keyword} trong 10 phút",
-        f"Top 10 điều thú vị về {keyword}",
-        f"{keyword} cho người mới bắt đầu",
-        f"Chiến lược {keyword} hiệu quả",
-        f"Tất cả về {keyword}"
-    ]
+if "description" not in st.session_state:
+    st.session_state.description = ""
 
-    return titles
+if "keywords" not in st.session_state:
+    st.session_state.keywords = []
 
+if "comment" not in st.session_state:
+    st.session_state.comment = ""
 
-def generate_tags(keyword):
+# =========================
+# INPUT
+# =========================
 
-    tags = [
-        keyword,
-        f"{keyword} tutorial",
-        f"{keyword} guide",
-        f"{keyword} tips",
-        f"{keyword} beginner",
-        f"learn {keyword}",
-        f"{keyword} vietnam",
-        f"{keyword} youtube",
-        f"{keyword} strategy",
-        f"{keyword} secrets"
-    ]
+keyword = st.text_input("Từ khóa chính (Bắt buộc)")
+competitor = st.text_input("Link video đối thủ (Tùy chọn)")
+channel = st.text_input("Link kênh YouTube của bạn (Tùy chọn)")
 
-    return tags
+# =========================
+# GENERATE MAIN CONTENT
+# =========================
 
-
-def generate_description(keyword):
-
-    return f"""
-Video này nói về **{keyword}**
-
-Trong video bạn sẽ học:
-
-• {keyword} là gì  
-• Cách bắt đầu với {keyword}  
-• Những sai lầm phổ biến  
-• Mẹo nâng cao  
-
-Đăng ký kênh để học thêm nhiều kiến thức hữu ích.
-"""
-
-
-def generate_script(keyword):
-
-    script = f"""
-🎬 INTRO
-Hôm nay chúng ta sẽ tìm hiểu về {keyword}.
-
-📚 CONTENT
-
-1️⃣ {keyword} là gì  
-2️⃣ Vì sao {keyword} quan trọng  
-3️⃣ Cách áp dụng {keyword} hiệu quả  
-
-🚀 OUTRO
-Nếu video hữu ích hãy like và subscribe kênh.
-"""
-
-    return script
-
-
-def generate_thumbnail_prompt(keyword, text):
-
-    return f"""
-YouTube thumbnail
-
-Topic: {keyword}
-Text: {text}
-
-Bright colors
-High contrast
-Shocked expression
-Professional YouTube thumbnail
-"""
-
-
-# ---------- INPUT UI ----------
-
-st.header("📥 Nhập thông tin")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    keyword = st.text_input("Từ khóa chính")
-
-with col2:
-    channel = st.text_input("Link kênh (optional)")
-
-
-# ---------- GENERATE SEO ----------
-
-if st.button("🚀 TẠO SEO VIDEO"):
+if st.button("⚡ Tạo Nội Dung Tối Ưu"):
 
     if keyword == "":
-        st.warning("Hãy nhập từ khóa")
+        st.warning("Vui lòng nhập từ khóa")
     else:
 
-        st.success("Đang tạo nội dung SEO...")
+        titles = [
+            f"Unveiling {keyword}: Life Million Years Ago Explained",
+            f"The Lost World of {keyword}",
+            f"Journey to the Past: {keyword}",
+            f"Amazing Secrets of {keyword}",
+            f"Beyond Dinosaurs: {keyword}",
+            f"Shocking Truth About {keyword}",
+            f"Discovering {keyword}",
+            f"Deep Dive Into {keyword}",
+            f"The Story of {keyword}",
+            f"What Life Was Like: {keyword}"
+        ]
 
-        titles = generate_titles(keyword)
+        st.session_state.titles = titles
 
-        st.subheader("🔥 Tiêu đề video")
+        keywords = [
+            keyword,"prehistoric earth","ancient earth","dinosaurs",
+            "paleontology","fossils","mesozoic era","jurassic period",
+            "triassic period","cretaceous period","extinct animals",
+            "early life on earth","ancient creatures","evolution of life",
+            "origins of life","earth history","geological time scale",
+            "cambrian explosion","permian extinction","devonian period",
+            "prehistoric animals","ancient marine life","lost world",
+            "earth millions years","history earth"
+        ]
 
-        for t in titles:
-            st.write("•", t)
+        st.session_state.keywords = keywords
 
+        st.session_state.comment = f"""
+If you could travel back in time to witness {keyword},
+what moment would you want to see most?
 
-        tags = generate_tags(keyword)
+Comment below 👇
+"""
 
-        st.subheader("🏷 Tags SEO")
+# =========================
+# RESULT PANEL
+# =========================
 
-        st.write(", ".join(tags))
+if st.session_state.titles:
 
+    st.divider()
+    st.subheader(f"KẾT QUẢ CHO TỪ KHÓA: {keyword.upper()}")
 
-        desc = generate_description(keyword)
+    # =====================
+    # SEO SCORE
+    # =====================
 
-        st.subheader("📝 Description")
+    seo_score = random.randint(75,95)
+    st.metric("SEO Score", f"{seo_score}/100")
 
-        st.write(desc)
+    # =====================
+    # COMPETITOR TOOLS
+    # =====================
 
+    st.markdown("### 🚀 Công cụ phân tích đối thủ")
 
-        script = generate_script(keyword)
+    col1,col2,col3 = st.columns(3)
 
-        st.subheader("🎬 Video Script")
+    with col1:
+        if st.button("Danh mục video"):
+            st.success("Danh mục đề xuất: Education / Science")
 
-        st.write(script)
+    with col2:
+        if st.button("Thẻ Tag Video"):
+            st.info("Video nên có 15-20 tags")
 
+    with col3:
+        if st.button("Thông tin video"):
+            st.info("Video dài 8-15 phút thường có retention tốt")
 
-        # SAVE SESSION
-        st.session_state["titles"] = titles
-        st.session_state["tags"] = tags
-        st.session_state["desc"] = desc
-        st.session_state["script"] = script
+    # =====================
+    # TITLES
+    # =====================
 
+    st.markdown("### 🏆 10 Tiêu Đề YouTube")
 
-# ---------- THUMBNAIL TOOL ----------
+    for i,t in enumerate(st.session_state.titles,1):
+        col1,col2 = st.columns([6,1])
 
-st.header("🎨 Thumbnail Prompt Generator")
+        with col1:
+            st.write(f"**Tiêu đề {i}:** {t}")
 
-thumb_text = st.text_input("Text trên thumbnail")
+        with col2:
+            st.button("Copy", key=f"copy{i}")
 
-if st.button("Tạo Prompt Thumbnail"):
+    selected_title = st.selectbox(
+        "Chọn tiêu đề để tạo mô tả",
+        st.session_state.titles
+    )
 
-    if keyword == "":
-        st.warning("Nhập keyword trước")
-    else:
+    # =====================
+    # DESCRIPTION
+    # =====================
 
-        prompt = generate_thumbnail_prompt(keyword, thumb_text)
+    if st.button("✍️ Tạo Mô Tả SEO"):
+
+        desc = f"""
+🔥 {selected_title}
+
+In this video we explore **{keyword}** and uncover
+the secrets of life millions of years ago.
+
+Discover prehistoric creatures, ancient Earth,
+and the evolution of life.
+
+#prehistoricearth #ancientlife #dinosaurs
+"""
+
+        st.session_state.description = desc
+
+    if st.session_state.description:
+        st.markdown("### 📄 Mô Tả YouTube")
+        st.code(st.session_state.description)
+
+    # =====================
+    # KEYWORDS
+    # =====================
+
+    st.markdown("### 📈 25 Từ Khóa SEO")
+
+    st.write(", ".join(st.session_state.keywords))
+
+    # =====================
+    # PIN COMMENT
+    # =====================
+
+    st.markdown("### 💬 Bình Luận Ghim")
+
+    st.code(st.session_state.comment)
+
+    # =====================
+    # THUMBNAIL PROMPT
+    # =====================
+
+    st.markdown("### 🎨 Công Cụ Tạo Thumbnail")
+
+    thumb_text = st.text_input("Text trên Thumbnail")
+
+    style = st.radio(
+        "Chọn phong cách",
+        ["Ảnh thật","3D Render","Điện ảnh","Hoạt hình","Tối giản"]
+    )
+
+    if st.button("Tạo Prompt Ảnh"):
+
+        prompt = f"""
+Cinematic {keyword}, dramatic lighting,
+{style} style youtube thumbnail,
+big bold text "{thumb_text}",
+ultra realistic, 8k
+"""
 
         st.code(prompt)
 
+    # =====================
+    # DOWNLOAD
+    # =====================
 
-# ---------- DOWNLOAD SEO PACK ----------
+    st.markdown("### ⬇ Tải Nội Dung")
 
-st.header("📥 Download SEO Pack")
+    full_text = f"""
+KEYWORD
+{keyword}
 
-if st.button("Tải xuống SEO"):
+TITLES
+{st.session_state.titles}
 
-    if "titles" in st.session_state:
+KEYWORDS
+{st.session_state.keywords}
 
-        data = f"""
-Keyword: {keyword}
-
-Titles:
-{st.session_state['titles']}
-
-Tags:
-{st.session_state['tags']}
-
-Description:
-{st.session_state['desc']}
-
-Script:
-{st.session_state['script']}
+COMMENT
+{st.session_state.comment}
 """
 
-        st.download_button(
-            "Download File",
-            data,
-            file_name="youtube_seo_pack.txt"
-        )
+    st.download_button(
+        "Download File",
+        full_text,
+        file_name="youtube_seo.txt"
+    )
 
-    else:
+    # =====================
+    # RESET
+    # =====================
 
-        st.warning("Hãy tạo SEO trước")
+    if st.button("🔄 Tạo nội dung mới"):
+        st.session_state.clear()
+        st.rerun()

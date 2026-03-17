@@ -1,321 +1,116 @@
 import streamlit as st
-import random
-
-st.set_page_config(page_title="YouTube SEO AI Tool", layout="centered")
-
-st.title("🚀 Chuyên Gia SEO Video")
-st.caption("Công cụ AI tối ưu video YouTube lên top")
-
-# =========================
-# SESSION STATE
-# =========================
-
-if "titles" not in st.session_state:
-    st.session_state.titles=[]
-
-if "viral_titles" not in st.session_state:
-    st.session_state.viral_titles=[]
-
-if "keywords" not in st.session_state:
-    st.session_state.keywords=[]
-
-if "hashtags" not in st.session_state:
-    st.session_state.hashtags=[]
-
-if "description" not in st.session_state:
-    st.session_state.description=""
-
-if "hook" not in st.session_state:
-    st.session_state.hook=""
-
-if "script" not in st.session_state:
-    st.session_state.script=""
-
-# =========================
-# INPUT
-# =========================
-
-keyword = st.text_input("Từ khóa chính")
-competitor = st.text_input("Link video đối thủ")
-channel = st.text_input("Link kênh")
-
-# =========================
-# KEYWORD RESEARCH
-# =========================
-
-st.markdown("### 🔍 Keyword Research")
-
-if st.button("Gợi ý keyword mở rộng"):
-
-    suggestions=[
-        f"{keyword} documentary",
-        f"{keyword} explained",
-        f"{keyword} history",
-        f"{keyword} facts",
-        f"{keyword} evolution",
-        f"{keyword} discovery",
-        f"{keyword} secrets"
-    ]
-
-    st.write(suggestions)
-
-# =========================
-# GENERATE MAIN CONTENT
-# =========================
-
-if st.button("⚡ Tạo Nội Dung SEO"):
-
-    titles=[
-        f"Unveiling {keyword}",
-        f"The Lost World of {keyword}",
-        f"Secrets of {keyword}",
-        f"Amazing Facts About {keyword}",
-        f"Discovering {keyword}",
-        f"Deep Dive Into {keyword}",
-        f"History of {keyword}",
-        f"What Life Was Like: {keyword}",
-        f"Journey Through {keyword}",
-        f"The Truth About {keyword}"
-    ]
-
-    st.session_state.titles=titles
-
-    viral=[
-        f"You Won't Believe {keyword}",
-        f"The Dark Truth of {keyword}",
-        f"Scientists Finally Explain {keyword}",
-        f"The Hidden Story of {keyword}",
-        f"Shocking Discovery About {keyword}",
-        f"The Mystery Behind {keyword}",
-        f"Everything You Know About {keyword} Is Wrong",
-        f"The Untold Story of {keyword}",
-        f"The Rise and Fall of {keyword}",
-        f"The Secret History of {keyword}"
-    ]
-
-    st.session_state.viral_titles=viral
-
-    keywords=[
-        keyword,
-        "prehistoric earth",
-        "dinosaurs",
-        "ancient earth",
-        "paleontology",
-        "fossils",
-        "mesozoic era",
-        "jurassic period",
-        "triassic period",
-        "cretaceous period",
-        "extinct animals",
-        "earth history",
-        "ancient creatures",
-        "evolution of life",
-        "origins of life",
-        "cambrian explosion",
-        "permian extinction",
-        "devonian period",
-        "prehistoric animals",
-        "ancient marine life"
-    ]
-
-    st.session_state.keywords=keywords
-
-    hashtags=[f"#{k.replace(' ','')}" for k in keywords[:15]]
-
-    st.session_state.hashtags=hashtags
-
-# =========================
-# TITLES
-# =========================
-
-if st.session_state.titles:
-
-    st.divider()
-
-    st.subheader("🏆 10 Tiêu đề YouTube")
-
-    for i,t in enumerate(st.session_state.titles,1):
-        st.write(f"{i}. {t}")
-
-    st.subheader("🔥 Viral Titles")
-
-    for t in st.session_state.viral_titles:
-        st.write(t)
-
-    selected_title=st.selectbox(
-        "Chọn tiêu đề tạo mô tả",
-        st.session_state.titles
-    )
-
-# =========================
-# DESCRIPTION
-# =========================
-
-    if st.button("✍️ Tạo mô tả SEO"):
-
-        desc=f"""
-🔥 {selected_title}
-
-Explore {keyword} and discover incredible secrets.
-
-This video explains the history, science and mystery behind {keyword}.
-
-{ " ".join(st.session_state.hashtags[:5]) }
-"""
-
-        st.session_state.description=desc
-
-    if st.session_state.description:
-        st.markdown("### 📄 Mô tả SEO")
-        st.code(st.session_state.description)
-
-# =========================
-# KEYWORDS
-# =========================
-
-    st.markdown("### 📈 SEO Keywords")
-
-    st.write(", ".join(st.session_state.keywords))
-
-# =========================
-# HASHTAGS
-# =========================
-
-    st.markdown("### 🔥 Hashtags lên top")
-
-    st.write(" ".join(st.session_state.hashtags))
-
-# =========================
-# HOOK GENERATOR
-# =========================
-
-    st.markdown("### 🎬 Video Hook")
-
-    if st.button("Tạo Hook Video"):
-
-        hook=f"""
-What if everything you knew about {keyword} was wrong?
-
-Today we reveal the truth behind {keyword}
-and the discoveries that changed history.
-"""
-
-        st.session_state.hook=hook
-
-    if st.session_state.hook:
-        st.code(st.session_state.hook)
-
-# =========================
-# SCRIPT GENERATOR
-# =========================
-
-    st.markdown("### 🧠 Video Script")
-
-    if st.button("Tạo Script Video"):
-
-        script=f"""
-INTRO
-Welcome to this documentary about {keyword}.
-
-SECTION 1
-Origins of {keyword}
-
-SECTION 2
-Major discoveries
-
-SECTION 3
-Why it matters today
-
-OUTRO
-Subscribe for more educational content.
-"""
-
-        st.session_state.script=script
-
-    if st.session_state.script:
-        st.code(st.session_state.script)
-
-# =========================
-# PIN COMMENT
-# =========================
-
-    st.markdown("### 💬 Bình luận ghim")
-
-    comment=f"""
-If you could travel back in time to see {keyword},
-what moment would you choose?
-
-👇 Comment below
-"""
-
-    st.code(comment)
-
-# =========================
-# THUMBNAIL PROMPT
-# =========================
-
-    st.markdown("### 🎨 Thumbnail Prompt")
-
-    text_thumb=st.text_input("Text trên thumbnail")
-
-    style=st.selectbox(
-        "Phong cách",
-        ["cinematic","realistic","3D render","cartoon","epic"]
-    )
-
-    if st.button("Tạo Prompt Thumbnail"):
-
-        prompt=f"""
-youtube thumbnail, {keyword},
-dramatic lighting,
-{style} style,
-big bold text '{text_thumb}',
-ultra detailed
-"""
-
-        st.code(prompt)
-
-# =========================
-# SEO SCORE
-# =========================
-
-    score=random.randint(82,96)
-
-    st.metric("SEO Score",score)
-
-# =========================
-# EXPORT
-# =========================
-
-    st.markdown("### 📦 Export SEO Pack")
-
-    pack=f"""
-Keyword:
-{keyword}
-
-Titles:
-{st.session_state.titles}
-
-Viral Titles:
-{st.session_state.viral_titles}
-
-Keywords:
-{st.session_state.keywords}
-
-Hashtags:
-{st.session_state.hashtags}
-"""
-
-    st.download_button(
-        "Download SEO Pack",
-        pack,
-        file_name="youtube_seo_pack.txt"
-    )
-
-# =========================
-# RESET
-# =========================
-
-if st.button("🔄 Reset Tool"):
-    st.session_state.clear()
-    st.rerun()
+import google.generativeai as genai
+import json
+import pandas as pd
+import time
+
+# --- CẤU HÌNH HỆ THỐNG ---
+st.set_page_config(page_title="Veo 3 Automation Tool", layout="wide")
+
+# Hàm lấy API Key an toàn
+def get_api_key():
+    if "GEMINI_API_KEY" in st.secrets:
+        return st.secrets["GEMINI_API_KEY"]
+    return st.sidebar.text_input("Nhập Gemini API Key:", type="password")
+
+api_key = get_api_key()
+
+if api_key:
+    genai.configure(api_key=api_key)
+    # Sử dụng 'gemini-1.5-flash' để có tốc độ nhanh và ổn định
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    st.warning("⚠️ Vui lòng nhập API Key ở thanh bên để bắt đầu.")
+    st.stop()
+
+# Khởi tạo Session State để lưu dữ liệu qua các bước
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'stories' not in st.session_state: st.session_state.stories = []
+if 'selected_story' not in st.session_state: st.session_state.selected_story = None
+if 'characters' not in st.session_state: st.session_state.characters = {"name": "Mamala", "prompt": ""}
+
+# --- HÀM TRỢ GIÚP (HELPER) ---
+def parse_ai_json(text):
+    """Làm sạch và parse JSON từ AI để tránh lỗi markdown"""
+    try:
+        clean_text = text.replace("```json", "").replace("```", "").strip()
+        return json.loads(clean_text)
+    except:
+        return None
+
+# --- GIAO DIỆN TỪNG BƯỚC ---
+
+# BƯỚC 1: TẠO Ý TƯỞNG
+if st.session_state.step == 1:
+    st.markdown("### Bước 1: Tạo ý tưởng câu chuyện")
+    with st.container(border=True):
+        topic = st.text_area("Nhập thể loại hoặc ý tưởng câu chuyện", 
+                             placeholder="Ví dụ: phim hoạt hình phiêu lưu về cậu bé GaiO và robot Bibi...")
+        col1, col2 = st.columns(2)
+        style = col1.selectbox("Phong cách", ["Hoạt hình 3D", "Anime", "Cyberpunk", "Disney Style"])
+        quantity = col2.number_input("Số lượng câu chuyện", 1, 5, 3)
+        
+        if st.button("Tạo câu chuyện", type="primary"):
+            with st.spinner("AI đang lên ý tưởng..."):
+                prompt = f"Tạo {quantity} ý tưởng phim {style} về {topic}. Trả về JSON list: [{{'title': '...', 'summary': '...'}}]"
+                res = model.generate_content(prompt)
+                data = parse_ai_json(res.text)
+                if data:
+                    st.session_state.stories = data
+                    st.session_state.step = 2
+                    st.rerun()
+                else:
+                    st.error("AI không trả về đúng định dạng. Hãy thử lại!")
+
+# BƯỚC 2: CHỌN CÂU CHUYỆN
+elif st.session_state.step == 2:
+    st.markdown("### Bước 2: Chọn câu chuyện & Tạo nhân vật")
+    if st.button("← Quay lại"): st.session_state.step = 1; st.rerun()
+    
+    for idx, s in enumerate(st.session_state.stories):
+        with st.container(border=True):
+            st.subheader(f"{idx+1}. {s['title']}")
+            st.write(s['summary'])
+            if st.button(f"Chọn câu chuyện này", key=f"btn_{idx}"):
+                st.session_state.selected_story = s
+                st.session_state.step = 3
+                st.rerun()
+
+# BƯỚC 3: CHI TIẾT NHÂN VẬT & KỊCH BẢN
+elif st.session_state.step == 3:
+    st.markdown("### Bước 3: Chỉnh sửa nhân vật & Cấu hình kịch bản")
+    col_left, col_right = st.columns([1, 2])
+    
+    with col_left:
+        st.subheader("Nhân vật")
+        st.session_state.characters["name"] = st.text_input("Tên nhân vật", st.session_state.characters["name"])
+        char_desc = st.text_area("Mô tả ngoại hình (Prompt)", 
+                                 "Mèo xám, mắt xanh lá, phong cách 3D, mặc áo choàng đỏ...")
+        st.session_state.characters["prompt"] = char_desc
+        st.image("https://via.placeholder.com/300?text=Character+Preview", use_container_width=True)
+
+    with col_right:
+        st.subheader("Cài đặt kịch bản")
+        duration = st.slider("Thời lượng video (phút)", 1, 12, 3)
+        env = st.text_area("Môi trường chủ đạo", "Rừng nguyên sinh sao Hỏa, ánh sáng tím...")
+        
+        if st.button("Tạo kịch bản chi tiết", type="primary"):
+            with st.spinner("Đang xây dựng 90 cảnh phim..."):
+                prompt = f"""Dựa trên chuyện '{st.session_state.selected_story['title']}', 
+                nhân vật {st.session_state.characters['name']} ({char_desc}), bối cảnh {env}. 
+                Hãy tạo kịch bản {duration} phút. Trả về JSON list các cảnh:
+                [{{'STT': 1, 'MO_TA': '...', 'VEO_PROMPT': '...', 'NHAN_VAT': 'Có'}}]"""
+                res = model.generate_content(prompt)
+                st.session_state.final_script = parse_ai_json(res.text)
+                st.session_state.step = 4
+                st.rerun()
+
+# BƯỚC 4: KẾT QUẢ CUỐI CÙNG
+elif st.session_state.step == 4:
+    st.success("✅ Kịch bản đã sẵn sàng!")
+    df = pd.DataFrame(st.session_state.final_script)
+    st.table(df)
+    
+    col1, col2 = st.columns(2)
+    if col1.button("Tạo kịch bản mới"): st.session_state.step = 1; st.rerun()
+    col2.download_button("Tải File Prompts (.csv)", df.to_csv(index=False), "script.csv", "text/csv")
